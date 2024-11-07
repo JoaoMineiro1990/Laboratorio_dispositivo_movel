@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 class AdicionarAmbiente extends StatelessWidget {
-  final VoidCallback
-      aoAdicionarAmbiente; 
-
+  final VoidCallback aoAdicionarAmbiente;
+  final VoidCallback aoCancelar;
   const AdicionarAmbiente({
     super.key,
     required this.aoAdicionarAmbiente,
+    required this.aoCancelar,
   });
 
   @override
@@ -62,20 +62,40 @@ class AdicionarAmbiente extends StatelessWidget {
           const SizedBox(height: 20),
           // Botão Adicionar
           Center(
-            child: ElevatedButton(
-              onPressed: aoAdicionarAmbiente, // Chama o callback ao pressionar
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange[100],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: aoCancelar, // Callback para cancelar
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange[100],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15, horizontal: 30),
+                  ),
+                  child: const Text(
+                    'CANCELAR',
+                    style: TextStyle(color: Colors.black, fontSize: 16),
+                  ),
                 ),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-              ),
-              child: const Text(
-                'ADICIONAR',
-                style: TextStyle(color: Colors.black, fontSize: 16),
-              ),
+                ElevatedButton(
+                  onPressed: aoAdicionarAmbiente, // Callback para salvar
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange[100],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15, horizontal: 30),
+                  ),
+                  child: const Text(
+                    'SALVAR',
+                    style: TextStyle(color: Colors.black, fontSize: 16),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

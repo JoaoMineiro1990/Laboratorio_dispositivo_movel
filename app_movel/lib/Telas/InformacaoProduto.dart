@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 class InformacaoProduto extends StatelessWidget {
   final VoidCallback aoEditarProduto; // Callback para acessar a tela de edição
+  final VoidCallback aoCancelar; // Callback para voltar à tela anterior
 
   const InformacaoProduto({
     super.key,
     required this.aoEditarProduto,
+    required this.aoCancelar,
   });
 
   @override
@@ -16,20 +18,17 @@ class InformacaoProduto extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Centralizando o Card com a imagem e nome do produto
-          Center(
+          const Center(
             child: Card(
               elevation: 4,
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(16.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment:
-                      MainAxisAlignment.center, // Centraliza verticalmente
-                  crossAxisAlignment:
-                      CrossAxisAlignment.center, // Centraliza horizontalmente
-                  children: const [
-                    Icon(Icons.local_offer,
-                        size: 80, color: Colors.yellow), // Ícone do produto
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(Icons.local_offer, size: 80, color: Colors.yellow),
                     SizedBox(height: 10),
                     Text(
                       "PRODUTO5",
@@ -91,22 +90,42 @@ class InformacaoProduto extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          // Botão Editar
+          // Botões de Editar e Voltar
           Center(
-            child: ElevatedButton(
-              onPressed: aoEditarProduto,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange[100],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: aoCancelar, // Callback para voltar
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange[100],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15, horizontal: 30),
+                  ),
+                  child: const Text(
+                    'VOLTAR',
+                    style: TextStyle(color: Colors.black, fontSize: 16),
+                  ),
                 ),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-              ),
-              child: const Text(
-                'EDITAR',
-                style: TextStyle(color: Colors.black, fontSize: 16),
-              ),
+                ElevatedButton(
+                  onPressed: aoEditarProduto, // Callback para editar produto
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange[100],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15, horizontal: 30),
+                  ),
+                  child: const Text(
+                    'EDITAR',
+                    style: TextStyle(color: Colors.black, fontSize: 16),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

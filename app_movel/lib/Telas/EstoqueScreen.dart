@@ -15,38 +15,44 @@ class EstoqueScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<Map<String, String>> meusEstoques = [
       {
-        'titulo': 'Estoque Pessoal 1',
-        'descricao': 'Descrição do Estoque Pessoal 1'
+        'titulo': 'Ambiente Pessoal 1',
+        'descricao': 'Descrição do Ambiente Pessoal 1'
       },
       {
-        'titulo': 'Estoque Pessoal 2',
-        'descricao': 'Descrição do Estoque Pessoal 2'
+        'titulo': 'Ambiente Pessoal 2',
+        'descricao': 'Descrição do Ambiente Pessoal 2'
       },
     ];
 
     final List<Map<String, String>> estoquesCompartilhados = [
       {
-        'titulo': 'Estoque Compartilhado 1',
-        'descricao': 'Descrição do Estoque Compartilhado 1'
+        'titulo': 'Ambiente Compartilhado 1',
+        'descricao': 'Descrição do Ambiente Compartilhado 1'
       },
       {
-        'titulo': 'Estoque Compartilhado 2',
-        'descricao': 'Descrição do Estoque Compartilhado 2'
+        'titulo': 'Ambiente Compartilhado 2',
+        'descricao': 'Descrição do Ambiente Compartilhado 2'
       },
     ];
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.center, // Centraliza horizontalmente
         children: [
+          const SizedBox(height: 20),
           const Text(
-            "Meus Estoques",
+            "Meus Ambientes Pessoais",
             style: TextStyle(
-                fontSize: 20, fontWeight: FontWeight.bold, color: Colors.brown),
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.brown,
+            ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 10),
-          // Lista de Meus Estoques
+          // Lista de Meus Ambientes
           ...meusEstoques.map((estoque) {
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 8),
@@ -56,21 +62,25 @@ class EstoqueScreen extends StatelessWidget {
                 title: Text(estoque['titulo']!),
                 subtitle: Text(estoque['descricao']!),
                 onTap: () {
-                  aoSelecionarEstoque(estoque['titulo']!,
-                      estoque['descricao']!); // Chama a função de callback
+                  aoSelecionarEstoque(
+                      estoque['titulo']!, estoque['descricao']!);
                 },
               ),
             );
-          }).toList(),
+          }),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
           const Text(
-            "Estoques Compartilhados",
+            "Meus Ambientes Compartilhados",
             style: TextStyle(
-                fontSize: 20, fontWeight: FontWeight.bold, color: Colors.brown),
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.brown,
+            ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 10),
-          // Lista de Estoques Compartilhados
+          // Lista de Ambientes Compartilhados
           ...estoquesCompartilhados.map((estoque) {
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 8),
@@ -80,12 +90,12 @@ class EstoqueScreen extends StatelessWidget {
                 title: Text(estoque['titulo']!),
                 subtitle: Text(estoque['descricao']!),
                 onTap: () {
-                  aoSelecionarEstoque(estoque['titulo']!,
-                      estoque['descricao']!); // Chama a função de callback
+                  aoSelecionarEstoque(
+                      estoque['titulo']!, estoque['descricao']!);
                 },
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );

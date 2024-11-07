@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 class EditarAmbiente extends StatelessWidget {
-  final VoidCallback
-      aoSalvarAmbiente; 
+  final VoidCallback aoSalvarAmbiente;
+  final VoidCallback aoCancelar;
   const EditarAmbiente({
     super.key,
     required this.aoSalvarAmbiente,
+    required this.aoCancelar,
   });
 
   @override
@@ -15,7 +16,6 @@ class EditarAmbiente extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Imagem do ambiente
           const Center(
             child: Card(
               elevation: 4,
@@ -24,8 +24,7 @@ class EditarAmbiente extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.home,
-                        size: 80, color: Colors.orange), // Ícone do ambiente
+                    Icon(Icons.home, size: 80, color: Colors.orange),
                     SizedBox(height: 10),
                     Text(
                       "AMBIENTE1",
@@ -41,40 +40,56 @@ class EditarAmbiente extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          // Campo de edição - Nome
           _buildEditableField(
             label: "NOME",
             hintText: "Digite o nome do ambiente",
           ),
           const SizedBox(height: 10),
-          // Campo de edição - Localização
           _buildEditableField(
             label: "LOCALIZAÇÃO",
             hintText: "Digite a localização do ambiente",
           ),
           const SizedBox(height: 10),
-          // Campo de edição - Descrição
           _buildEditableField(
             label: "DESCRIÇÃO",
             hintText: "Descreva o ambiente",
           ),
           const SizedBox(height: 20),
-          // Botão Salvar
           Center(
-            child: ElevatedButton(
-              onPressed: aoSalvarAmbiente, // Chama o callback ao pressionar
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange[100],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: aoCancelar,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange[100],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15, horizontal: 30),
+                  ),
+                  child: const Text(
+                    'CANCELAR',
+                    style: TextStyle(color: Colors.black, fontSize: 16),
+                  ),
                 ),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-              ),
-              child: const Text(
-                'SALVAR',
-                style: TextStyle(color: Colors.black, fontSize: 16),
-              ),
+                ElevatedButton(
+                  onPressed: aoSalvarAmbiente,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange[100],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15, horizontal: 30),
+                  ),
+                  child: const Text(
+                    'SALVAR',
+                    style: TextStyle(color: Colors.black, fontSize: 16),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -82,7 +97,6 @@ class EditarAmbiente extends StatelessWidget {
     );
   }
 
-  // Função auxiliar para construir os campos editáveis
   Widget _buildEditableField({
     required String label,
     required String hintText,

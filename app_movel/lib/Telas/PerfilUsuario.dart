@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class PerfilUsuario extends StatelessWidget {
-  final VoidCallback aoEditarPerfil; // Callback para acessar a tela de edição
+  final VoidCallback aoEditarPerfil; // Callback para abrir a tela de edição
 
   const PerfilUsuario({
     super.key,
@@ -15,44 +15,24 @@ class PerfilUsuario extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Imagem de perfil
           const Center(
             child: CircleAvatar(
-              radius: 50, // Tamanho da imagem de perfil
-              // backgroundImage: NetworkImage(
-              //     'https://i.pinimg.com/originals/7b/7b/7b/'
-              // ),
+              radius: 50,
             ),
           ),
           const SizedBox(height: 20),
-          // Campo de informação - Nome
-          _buildInfoField(
-            label: "NOME",
-            value: "Harry Styles",
-          ),
+          _buildInfoField(label: "NOME", value: "Harry Styles"),
           const SizedBox(height: 10),
-          // Campo de informação - Data de Nascimento
-          _buildInfoField(
-            label: "DATA DE NASCIMENTO",
-            value: "01/02/1994",
-          ),
+          _buildInfoField(label: "DATA DE NASCIMENTO", value: "01/02/1994"),
           const SizedBox(height: 10),
-          // Campo de informação - Profissão
-          _buildInfoField(
-            label: "PROFISSÃO",
-            value: "Agricultor",
-          ),
+          _buildInfoField(label: "PROFISSÃO", value: "Agricultor"),
           const SizedBox(height: 10),
-          // Campo de informação - Email
-          _buildInfoField(
-            label: "EMAIL",
-            value: "harrystyles@gmail.com",
-          ),
+          _buildInfoField(label: "EMAIL", value: "harrystyles@gmail.com"),
           const SizedBox(height: 20),
-          // Botão Editar
+          // Botão Editar que chama o callback para abrir a tela de edição
           Center(
             child: ElevatedButton(
-              onPressed: aoEditarPerfil, // Chama o callback ao clicar
+              onPressed: aoEditarPerfil, // Chama o callback
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange[100],
                 shape: RoundedRectangleBorder(
@@ -72,11 +52,7 @@ class PerfilUsuario extends StatelessWidget {
     );
   }
 
-  // Função auxiliar para construir os campos de informação
-  Widget _buildInfoField({
-    required String label,
-    required String value,
-  }) {
+  Widget _buildInfoField({required String label, required String value}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -93,10 +69,7 @@ class PerfilUsuario extends StatelessWidget {
             color: Colors.orange[100],
             borderRadius: BorderRadius.circular(20.0),
           ),
-          child: Text(
-            value,
-            style: const TextStyle(color: Colors.black),
-          ),
+          child: Text(value, style: const TextStyle(color: Colors.black)),
         ),
       ],
     );

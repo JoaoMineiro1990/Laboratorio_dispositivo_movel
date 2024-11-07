@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
 class EdicaoProduto extends StatelessWidget {
-  const EdicaoProduto({super.key, required this.aoCancelar});
+  const EdicaoProduto(
+      {super.key,
+      required this.aoCancelar,
+      required this.aoSalvarAlteracaoProduto});
+  final VoidCallback aoSalvarAlteracaoProduto;
   final VoidCallback aoCancelar;
   @override
   Widget build(BuildContext context) {
@@ -80,27 +84,46 @@ class EdicaoProduto extends StatelessWidget {
             ),
           ),
         ),
-        // Botão Deletar fixo na parte inferior
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Center(
-            child: ElevatedButton(
-              onPressed: aoCancelar,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange[100],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.0),
+        const SizedBox(height: 20),
+        // Botões de Editar e Voltar
+        Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: aoCancelar, // Callback para voltar
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange[100],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
                 ),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                child: const Text(
+                  'VOLTAR',
+                  style: TextStyle(color: Colors.black, fontSize: 16),
+                ),
               ),
-              child: const Text(
-                'DELETAR',
-                style: TextStyle(color: Colors.black, fontSize: 16),
+              ElevatedButton(
+                onPressed: aoSalvarAlteracaoProduto,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange[100],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                ),
+                child: const Text(
+                  'ATUALIZAR',
+                  style: TextStyle(color: Colors.black, fontSize: 16),
+                ),
               ),
-            ),
+            ],
           ),
         ),
+        const SizedBox(height: 20),
       ],
     );
   }

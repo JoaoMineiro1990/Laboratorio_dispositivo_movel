@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 class AdicionarProduto extends StatelessWidget {
   final VoidCallback aoAdicionarProduto; // Callback para adicionar o produto
+  final VoidCallback aoCancelar; // Callback para voltar à tela anterior
 
   const AdicionarProduto({
     super.key,
     required this.aoAdicionarProduto,
+    required this.aoCancelar,
   });
 
   @override
@@ -60,24 +62,45 @@ class AdicionarProduto extends StatelessWidget {
             hintText: "Descreva o produto",
           ),
           const SizedBox(height: 20),
-          // Botão Adicionar
+          // Botões de Adicionar e Voltar
           Center(
-            child: ElevatedButton(
-              onPressed: aoAdicionarProduto, // Chama o callback ao pressionar
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange[100],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: aoCancelar, // Callback para voltar
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange[100],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15, horizontal: 30),
+                  ),
+                  child: const Text(
+                    'VOLTAR',
+                    style: TextStyle(color: Colors.black, fontSize: 16),
+                  ),
                 ),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-              ),
-              child: const Text(
-                'ADICIONAR',
-                style: TextStyle(color: Colors.black, fontSize: 16),
-              ),
+                ElevatedButton(
+                  onPressed: aoAdicionarProduto, // Callback para adicionar
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange[100],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15, horizontal: 30),
+                  ),
+                  child: const Text(
+                    'ADICIONAR',
+                    style: TextStyle(color: Colors.black, fontSize: 16),
+                  ),
+                ),
+              ],
             ),
           ),
+          const SizedBox(height: 20),
         ],
       ),
     );

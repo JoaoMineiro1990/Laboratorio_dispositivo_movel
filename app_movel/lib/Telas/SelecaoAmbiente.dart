@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 
 class SelecaoAmbientes extends StatelessWidget {
   final String tituloEstoque;
-  final VoidCallback
-      aoSelecionarProduto; // Callback para acessar a próxima tela
-  final VoidCallback aoCancelar; // Callback para voltar à tela de EstoqueScreen
+  final VoidCallback aoSelecionarProduto; // Callback para acessar próxima tela
+  final VoidCallback aoCancelar; // Callback para voltar à tela anterior
   final VoidCallback aoEditarAmbiente; // Callback para editar ambiente
   final VoidCallback
       aoAdicionarAmbiente; // Callback para adicionar novo ambiente
@@ -20,6 +19,18 @@ class SelecaoAmbientes extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final List<String> setores = [
+      "Setor de Frios",
+      "Setor de Frutas",
+      "Setor de Bebidas",
+      "Setor de Higiene",
+      "Setor de Laticínios",
+      "Setor de Carnes",
+      "Setor de Verduras",
+      "Setor de Limpeza",
+      "Setor de Padaria",
+    ];
+
     return Column(
       children: [
         Expanded(
@@ -29,7 +40,7 @@ class SelecaoAmbientes extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  "SELECIONE O AMBIENTE",
+                  "SELECIONE O SETOR",
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -37,22 +48,26 @@ class SelecaoAmbientes extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                // Lista de ambientes como na EstoqueScreen
+                // Lista de setores
                 Column(
-                  children: List.generate(9, (index) {
+                  children: setores.map((setor) {
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       child: ListTile(
-                        leading: const Icon(Icons.inventory,
-                            size: 40, color: Colors.brown), // Ícone do ambiente
-                        title: Text("AMBIENTE${index + 1}",
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
+                        leading: const Icon(
+                          Icons.inventory,
+                          size: 40,
+                          color: Colors.brown,
+                        ), // Ícone do setor
+                        title: Text(
+                          setor,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                         onTap:
                             aoSelecionarProduto, // Chama o callback ao clicar
                       ),
                     );
-                  }),
+                  }).toList(),
                 ),
               ],
             ),
@@ -65,7 +80,7 @@ class SelecaoAmbientes extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               ElevatedButton(
-                onPressed: aoEditarAmbiente, // Callback para editar o ambiente
+                onPressed: aoEditarAmbiente, // Callback para editar ambiente
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange[100],
                   shape: RoundedRectangleBorder(
@@ -81,7 +96,7 @@ class SelecaoAmbientes extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed:
-                    aoAdicionarAmbiente, // Callback para adicionar o ambiente
+                    aoAdicionarAmbiente, // Callback para adicionar ambiente
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange[100],
                   shape: RoundedRectangleBorder(
