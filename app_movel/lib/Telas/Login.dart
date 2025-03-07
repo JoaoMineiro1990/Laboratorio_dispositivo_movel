@@ -1,8 +1,15 @@
+// ignore_for_file: use_build_context_synchronously, avoid_print
+
 import 'package:app_movel/Telas/Aplicacao.dart';
-
 import 'package:app_movel/Telas/Cadastro.dart';
-
 import 'package:flutter/material.dart';
+import 'package:app_movel/Componentes/botao.dart';
+import 'package:app_movel/Componentes/alerta.dart';
+import 'package:app_movel/Componentes/campoescrever.dart';
+import 'package:app_movel/Componentes/cabecalho.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:app_movel/requisicoes/Autenticacao.dart';
+import 'package:app_movel/requisicoes/Conexao.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -12,53 +19,73 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  bool check() {
-    if (_emailLogin == "joao" && _senhaLogin == "12345") {
-      return true;
-    }
-    return false;
+  final _emailController = TextEditingController();
+  final _senhaController = TextEditingController();
+  bool _lembrarLogin = false;
+
+  late Autenticacao _autenticacao;
+
+  @override
+  void initState() {
+    super.initState();
+    _inicializarAutenticacao();
   }
 
-// Variáveis do login
-  String _emailLogin = '';
-  String _senhaLogin = '';
-  String _nameLogin = '';
-  bool _lembrarLogin = false;
+  Future<void> _inicializarAutenticacao() async {
+    try {
+      final conexao =
+          await Conexao.getConnection();
+      setState(() {
+        _autenticacao = Autenticacao(conexao);
+      });
+    } catch (e) {
+      print("Erro ao inicializar conexão: $e");
+    }
+  }
+
+  Future<void> _login() async {
+    String email = _emailController.text;
+    String senha = _senhaController.text;
+
+    try {
+      final resultado = await _autenticacao.autenticarUsuario(email, senha);
+
+      if (resultado == "true") {
+        final conexao = await Conexao.getConnection();
+        final idResult = await conexao.query(
+          "SELECT id FROM users WHERE email = @email",
+          substitutionValues: {"email": email},
+        );
+        if (idResult.isNotEmpty) {
+          final userId = idResult[0][0];
+
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString("user_id", userId);
+          print("ID do usuário salvo: $userId");
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const Aplicacao()),
+          );
+        }
+      } else {
+        Alerta(
+          titulo: "Erro de Login",
+          conteudo: resultado,
+        ).show(context);
+      }
+    } catch (e) {
+      Alerta(
+        titulo: "Erro",
+        conteudo: "Erro ao autenticar: $e",
+      ).show(context);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 243, 240, 240),
-      appBar: AppBar(
-        backgroundColor: Colors.orange[100],
-        elevation: 0,
-        title: const Row(
-          children: [
-            Expanded(
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Icon(Icons.inventory, color: Colors.brown),
-              ),
-            ),
-            Expanded(
-              child: Align(
-                alignment: Alignment.center,
-                child: Text(
-                  'StockPocket',
-                  style: TextStyle(
-                    color: Colors.brown,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: SizedBox(), // Adicionando um espaço à direita
-            ),
-          ],
-        ),
-      ),
+      appBar: Cabecalho(titulo: 'StockPocket'),
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -66,10 +93,9 @@ class _LoginState extends State<Login> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 30), // Ajuste de espaço superior
-                // Sign In text
+                const SizedBox(height: 30),
                 const Text(
-                  'Loggin',
+                  'Login',
                   style: TextStyle(
                     color: Colors.black,
                     fontSize: 28,
@@ -77,44 +103,19 @@ class _LoginState extends State<Login> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                // Email Field
-                TextField(
-                  onChanged: (value) {
-                    _emailLogin = value;
-                  },
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.email, color: Colors.brown),
-                    hintText: 'Digite seu email',
-                    filled: true,
-                    fillColor: Colors.orange[100],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
+                CampoEscrever(
+                  hintText: 'Digite seu email',
+                  prefixIcon: Icons.email,
+                  controller: _emailController,
                 ),
                 const SizedBox(height: 10),
-                // Password Field
-                TextField(
-                  obscureText: true,
-                  onChanged: (value) {
-                    _senhaLogin = value;
-                  },
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.lock, color: Colors.brown),
-                    hintText: 'Digite sua senha',
-                    filled: true,
-                    fillColor: Colors.orange[100],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide.none,
-                    ),
-                    suffixText: 'Esqueceu a senha?',
-                    suffixStyle: const TextStyle(color: Colors.black),
-                  ),
+                CampoEscrever(
+                  hintText: 'Digite sua senha',
+                  prefixIcon: Icons.lock,
+                  isPassword: true,
+                  controller: _senhaController,
                 ),
                 const SizedBox(height: 10),
-                // Remember login checkbox
                 Row(
                   children: [
                     Checkbox(
@@ -126,97 +127,36 @@ class _LoginState extends State<Login> {
                       },
                       activeColor: Colors.brown,
                     ),
-                    const Text('Lembrar o login',
-                        style: TextStyle(color: Colors.black)),
+                    const Text(
+                      'Lembrar o login',
+                      style: TextStyle(color: Colors.black),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange[100],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                    ),
-                    onPressed: () {
-                      bool validar = check();
-                      if (validar) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                Aplicacao(nomeDeUsuario: _nameLogin),
-                          ),
-                        );
-                      } else {
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              title: const Text("Dados inválidos"),
-                              content:
-                                  const Text("Usuário e/ou senha incorreto(a)"),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: const Text("Voltar"),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      }
-                    },
-                    child: const Text(
-                      'ENTRAR',
-                      style: TextStyle(color: Colors.black, fontSize: 16),
-                    ),
-                  ),
+                Botao(
+                  texto: 'ENTRAR',
+                  tipoNavegacao: 'none',
+                  beforeNavigate: () {
+                    _login();
+                    return false;
+                  },
                 ),
                 const SizedBox(height: 20),
-                // Sign Up Text
-                GestureDetector(
-                    onTap: () {
-                      // Handle sign up action
-                    },
-                    child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text('Não tem uma conta? ',
-                              style: TextStyle(color: Colors.black)),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange[100],
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 0),
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const Cadastro()),
-                              ).then((result) {
-                                if (result != null) {
-                                  setState(() {
-                                    _emailLogin = result['email'];
-                                    _senhaLogin = result['senha'];
-                                    _nameLogin = result['nome'];
-                                  });
-                                }
-                              });
-                            },
-                            child: const Text(
-                              'Cadastre-se',
-                              style:
-                                  TextStyle(color: Colors.black, fontSize: 16),
-                            ),
-                          ),
-                        ])),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Não tem uma conta? ',
+                      style: TextStyle(color: Colors.black),
+                    ),
+                    Botao(
+                      texto: 'Cadastre-se',
+                      tipoNavegacao: 'push',
+                      destino: Cadastro(),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

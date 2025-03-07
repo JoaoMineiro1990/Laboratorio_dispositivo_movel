@@ -1,0 +1,24 @@
+server:
+  servlet:
+    contextPath: /api/v1
+
+spring:
+  application:
+    name: gerencias
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/gerencias
+    username: postgres
+    password: 84139532
+flyway:
+  user: postgres
+  password: 84139532
+  url: jdbc:postgresql://localhost:5432/gerencias
+
+jwt:
+  secretKey: key

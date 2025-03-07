@@ -1,102 +1,190 @@
+import 'package:app_movel/Componentes/Cabecalho.dart';
+import 'package:app_movel/Componentes/Botao.dart';
+import 'package:app_movel/Componentes/CampoEscrever.dart';
+import 'package:app_movel/requisicoes/Conexao.dart';
+import 'package:app_movel/requisicoes/ProdutoReq.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 
-class InformacaoProduto extends StatelessWidget {
-  final VoidCallback aoEditarProduto; // Callback para acessar a tela de edição
-  final VoidCallback aoCancelar; // Callback para voltar à tela anterior
+class InformacaoProduto extends StatefulWidget {
+  const InformacaoProduto({super.key});
 
-  const InformacaoProduto({
-    super.key,
-    required this.aoEditarProduto,
-    required this.aoCancelar,
-  });
+  @override
+  State<InformacaoProduto> createState() => _InformacaoProdutoState();
+}
+
+class _InformacaoProdutoState extends State<InformacaoProduto> {
+  String produtoId = "";
+  final TextEditingController _nomeController = TextEditingController();
+  final TextEditingController _dataController = TextEditingController();
+  final TextEditingController _quantidadeController = TextEditingController();
+  late Produtoreq _produtoReq;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarProduto();
+  }
+
+  Future<void> _carregarProduto() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      produtoId = prefs.getString("product_id") ?? "";
+
+      final conexao = await Conexao.getConnection();
+      _produtoReq = Produtoreq(conexao);
+
+      final produto = await _produtoReq.getProdutoPorId(produtoId);
+
+      final dataExpiracao = produto['expiration_date'] is DateTime
+          ? DateFormat('yyyy-MM-dd').format(produto['expiration_date'])
+          : produto['expiration_date'] ?? "";
+
+      setState(() {
+        _nomeController.text = produto['name'] ?? "";
+        _dataController.text = dataExpiracao;
+        _quantidadeController.text = produto['quantidade']?.toString() ?? "";
+      });
+    } catch (e) {
+      print("Erro ao carregar produto: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Erro ao carregar produto.")),
+      );
+    }
+  }
+
+  Future<void> _atualizarProduto() async {
+    try {
+      final resultado = await _produtoReq.atualizarProduto(
+        produtoId,
+        _nomeController.text,
+        _dataController.text,
+        _quantidadeController.text,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(resultado)),
+      );
+      if (resultado.contains("sucesso")) {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      print("Erro ao atualizar produto: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Erro ao atualizar produto.")),
+      );
+    }
+  }
+
+  Future<void> _excluirProduto() async {
+    final confirmacao = await _mostrarDialogoConfirmacao();
+    if (!confirmacao) return;
+
+    try {
+      final resultado = await _produtoReq.deletarProduto(produtoId);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(resultado)),
+      );
+      if (resultado.contains("sucesso")) {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      print("Erro ao excluir produto: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Erro ao excluir produto.")),
+      );
+    }
+  }
+
+  Future<bool> _mostrarDialogoConfirmacao() async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text("Confirmação"),
+              content: const Text(
+                  "Você tem certeza que deseja excluir este produto?"),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text("Cancelar"),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text("Excluir"),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Centralizando o Card com a imagem e nome do produto
-          const Center(
-            child: Card(
-              elevation: 4,
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(Icons.local_offer, size: 80, color: Colors.yellow),
-                    SizedBox(height: 10),
-                    Text(
-                      "PRODUTO5",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.brown,
+    return Scaffold(
+      appBar: Cabecalho(titulo: 'Informações do Produto'),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Card(
+                elevation: 4,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.local_offer,
+                          size: 80, color: Colors.orange),
+                      const SizedBox(height: 10),
+                      Text(
+                        _nomeController.text.isNotEmpty
+                            ? _nomeController.text
+                            : "Produto",
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.brown,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          // Seção de informações
-          const Text(
-            "INFORMAÇÕES",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.brown,
+            const SizedBox(height: 20),
+            CampoEscrever(
+              hintText: "Nome do Produto",
+              prefixIcon: Icons.edit,
+              controller: _nomeController,
             ),
-          ),
-          const SizedBox(height: 10),
-          // Data de validade
-          _buildInfoCard(
-            icon: Icons.calendar_today,
-            title: "DATA DE VALIDADE",
-            description: "27 DE DEZEMBRO DE 2015 - EM 3 DIAS",
-          ),
-          const SizedBox(height: 10),
-          // Quantidade
-          _buildInfoCard(
-            icon: Icons.scale,
-            title: "QUANTIDADE",
-            description: "250 KG",
-          ),
-          const SizedBox(height: 10),
-          // Última compra / preço
-          _buildInfoCard(
-            icon: Icons.attach_money,
-            title: "ÚLTIMA COMPRA / PREÇO",
-            description: "20 DE DEZEMBRO 2015 | R\$ 19,90/kg",
-          ),
-          const SizedBox(height: 10),
-          // Alerta de validade próxima
-          const Row(
-            children: [
-              Icon(Icons.warning, color: Colors.red),
-              SizedBox(width: 5),
-              Text(
-                "DATA DE VALIDADE PRÓXIMA",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          // Botões de Editar e Voltar
-          Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            const SizedBox(height: 10),
+            CampoEscrever(
+              hintText: "Data de Expiração",
+              prefixIcon: Icons.calendar_today,
+              controller: _dataController,
+            ),
+            const SizedBox(height: 10),
+            CampoEscrever(
+              hintText: "Quantidade (kg)",
+              prefixIcon: Icons.numbers,
+              controller: _quantidadeController,
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                const Botao(
+                  texto: 'VOLTAR',
+                  tipoNavegacao: 'pop',
+                ),
+                const SizedBox(width: 10),
                 ElevatedButton(
-                  onPressed: aoCancelar, // Callback para voltar
+                  onPressed: _atualizarProduto,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange[100],
                     shape: RoundedRectangleBorder(
@@ -106,14 +194,18 @@ class InformacaoProduto extends StatelessWidget {
                         vertical: 15, horizontal: 30),
                   ),
                   child: const Text(
-                    'VOLTAR',
-                    style: TextStyle(color: Colors.black, fontSize: 16),
+                    "ATUALIZAR",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
+                const SizedBox(width: 10),
                 ElevatedButton(
-                  onPressed: aoEditarProduto, // Callback para editar produto
+                  onPressed: _excluirProduto,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange[100],
+                    backgroundColor: Colors.red[100],
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20.0),
                     ),
@@ -121,45 +213,14 @@ class InformacaoProduto extends StatelessWidget {
                         vertical: 15, horizontal: 30),
                   ),
                   child: const Text(
-                    'EDITAR',
-                    style: TextStyle(color: Colors.black, fontSize: 16),
+                    "EXCLUIR",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Função auxiliar para construir os cards de informação
-  Widget _buildInfoCard({
-    required IconData icon,
-    required String title,
-    required String description,
-  }) {
-    return Card(
-      color: Colors.orange[100],
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.brown),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(description),
-                ],
-              ),
             ),
           ],
         ),

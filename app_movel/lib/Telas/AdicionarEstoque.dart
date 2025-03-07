@@ -1,116 +1,76 @@
+import 'package:app_movel/Telas/Aplicacao.dart';
 import 'package:flutter/material.dart';
+import 'package:app_movel/Componentes/botao.dart';
+import 'package:app_movel/Componentes/CampoEscrever.dart'; // Certifique-se de importar a classe CampoEscrever
 
-class Adicionarestoque extends StatelessWidget {
-  const Adicionarestoque({super.key});
+class AdicionarEstoque extends StatelessWidget {
+  const AdicionarEstoque({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Campo de edição - Nome
-                _buildEditableField(
-                  label: "NOME",
-                  hintText: "Digite o nome do estoque",
-                ),
-                const SizedBox(height: 10),
-                // Campo de seleção - Estoque
-                _buildEditableField(
-                  label: "Descricao do Estoque",
-                  hintText: "ESTOQUE1",
-                ),
-                const SizedBox(height: 10),
-                // Campo de seleção - Ambiente
-                _buildEditableField(
-                  label: "Localizacao do Estoque",
-                  hintText: 'rua 10',
-                ),
-              ],
-            ),
-          ),
-        ),
-        // Botões de Salvar e Cancelar fixos na parte inferior
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  // Função para o botão "SALVAR" (atualmente sem ação)
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange[100],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20.0),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                ),
-                child: const Text(
-                  'SALVAR',
-                  style: TextStyle(color: Colors.black, fontSize: 16),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Imagem no topo da tela
+          const Center(
+            child: Card(
+              elevation: 4,
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.add_home,
+                        size: 80, color: Colors.orange), // Ícone do ambiente
+                    SizedBox(height: 10),
+                    Text(
+                      "NOVO AMBIENTE",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.brown,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  // Função para o botão "CANCELAR" (atualmente sem ação)
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange[100],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20.0),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                ),
-                child: const Text(
-                  'CANCELAR',
-                  style: TextStyle(color: Colors.black, fontSize: 16),
-                ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          // Nome do Estoque
+          CampoEscrever(
+            hintText: "Digite o nome do estoque",
+            prefixIcon: Icons.home,
+          ),
+          const SizedBox(height: 10),
+          // Descrição do Estoque
+          CampoEscrever(
+            hintText: "ESTOQUE1",
+            prefixIcon: Icons.description,
+          ),
+          const SizedBox(height: 10),
+          // Localização do Estoque
+          CampoEscrever(
+            hintText: "Rua 10",
+            prefixIcon: Icons.location_on,
+          ),
+          const SizedBox(height: 20),
+          // Botões de Adicionar e Cancelar
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(width: 10),
+              Botao(
+                texto: 'ADICIONAR',
+                tipoNavegacao: 'push',
+                destino: Aplicacao(),
               ),
             ],
           ),
-        ),
-      ],
-    );
-  }
-
-  // Função auxiliar para construir os campos editáveis
-  Widget _buildEditableField({
-    required String label,
-    required String hintText,
-    IconData? trailingIcon,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style:
-              const TextStyle(fontWeight: FontWeight.bold, color: Colors.brown),
-        ),
-        const SizedBox(height: 5),
-        TextField(
-          decoration: InputDecoration(
-            hintText: hintText,
-            filled: true,
-            fillColor: Colors.orange[100],
-            suffixIcon: trailingIcon != null
-                ? Icon(trailingIcon, color: Colors.brown)
-                : null,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(20.0),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -1,99 +1,123 @@
+// ignore_for_file: avoid_print, use_build_context_synchronously
+
+import 'package:app_movel/Componentes/Cabecalho.dart';
+import 'package:app_movel/Componentes/botao.dart';
+import 'package:app_movel/Componentes/ConteudoRolavel.dart';
+import 'package:app_movel/Telas/AdicionarProduto.dart';
+import 'package:app_movel/Telas/EditarAmbiente.dart';
+import 'package:app_movel/Telas/InformacaoProduto.dart';
+import 'package:app_movel/requisicoes/Conexao.dart';
+import 'package:app_movel/requisicoes/Produtoreq.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class Produtos extends StatelessWidget {
-  final VoidCallback
-      aoEntrarNoProduto; // Callback para acessar a próxima tela de informações do produto
-  final VoidCallback aoCancelar;
-  final VoidCallback
-      aoAdicionarProduto; // Callback para adicionar um novo produto
+class Produtos extends StatefulWidget {
+  const Produtos({super.key});
 
-  const Produtos({
-    super.key,
-    required this.aoEntrarNoProduto,
-    required this.aoCancelar,
-    required this.aoAdicionarProduto,
-  });
+  @override
+  State<Produtos> createState() => _ProdutosState();
+}
+
+class _ProdutosState extends State<Produtos> {
+  List<Map<String, dynamic>> produtos = [];
+  late Produtoreq _produtoReq;
+  String refrigeratorId = "";
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  Future<void> _carregarProdutos() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      refrigeratorId = prefs.getString("refrigerator_id") ?? "";
+
+      final conexao = await Conexao.getConnection();
+      _produtoReq = Produtoreq(conexao);
+
+      final listaProdutos =
+          await _produtoReq.getProdutosPorGeladeira(refrigeratorId);
+
+      print("Produtos carregados: $listaProdutos");
+
+      setState(() {
+        produtos = listaProdutos;
+      });
+    } catch (e) {
+      print("Erro ao carregar produtos: $e");
+    }
+  }
+
+  Future<void> _salvarProdutoId(String produtoId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("product_id", produtoId);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    _carregarProdutos();
+    return Scaffold(
+      appBar: Cabecalho(titulo: 'StockPocket'),
+      body: Column(
+        children: [
+          Expanded(
+            child: ConteudoRolavel(
+              titulo: 'Selecione o Produto',
+              itens: produtos
+                  .map((p) => {
+                        'titulo': p['name'],
+                        'descricao':
+                            "Vence em: ${p['expiration_date'] ?? 'Sem data'}",
+                        'id': p['id'],
+                      })
+                  .toList(),
+              iconePadrao: Icons.shopping_bag,
+              onTapItem: (titulo, descricao) async {
+                final produtoSelecionado = produtos.firstWhere(
+                    (p) => p['name'] == titulo && p['expiration_date'] != null);
+
+                final produtoId = produtoSelecionado['id'];
+
+                if (produtoId != null) {
+                  await _salvarProdutoId(
+                      produtoId);
+                  print("Produto selecionado: $produtoId");
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const InformacaoProduto()));
+                }
+              },
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                const Text(
-                  "SELECIONE O PRODUTO",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
+                Botao(
+                  texto: 'ADICIONAR',
+                  tipoNavegacao: 'push',
+                  destino: AdicionarProduto(),
                 ),
-                const SizedBox(height: 10),
-                // Lista de produtos
-                Column(
-                  children: List.generate(9, (index) {
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      child: ListTile(
-                        leading: const Icon(Icons.shopping_bag,
-                            size: 40, color: Colors.brown), // Ícone do produto
-                        title: Text("PRODUTO${index + 1}",
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                        onTap: aoEntrarNoProduto, // Chama o callback ao clicar
-                      ),
-                    );
-                  }),
+                SizedBox(width: 10),
+                Botao(
+                  texto: 'EDITAR',
+                  tipoNavegacao: 'push',
+                  destino:
+                      EditarAmbiente(), 
+                ),
+                SizedBox(width: 10),
+                Botao(
+                  texto: 'VOLTAR',
+                  tipoNavegacao: 'pop',
                 ),
               ],
             ),
           ),
-        ),
-        // Botões de "Novo" e "Cancelar" fixos
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed:
-                    aoAdicionarProduto, // Chama o callback para adicionar
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange[100],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20.0),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                ),
-                child: const Text(
-                  'NOVO',
-                  style: TextStyle(color: Colors.black, fontSize: 16),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: aoCancelar, // Chama o callback para cancelar
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange[100],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20.0),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                ),
-                child: const Text(
-                  'CANCELAR',
-                  style: TextStyle(color: Colors.black, fontSize: 16),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

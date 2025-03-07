@@ -1,134 +1,135 @@
+// ignore_for_file: avoid_print, use_build_context_synchronously, prefer_const_constructors
+
+import 'package:app_movel/Componentes/Botao.dart';
+import 'package:app_movel/Componentes/CampoEscrever.dart';
+import 'package:app_movel/Telas/Aplicacao.dart';
+import 'package:app_movel/requisicoes/Conexao.dart';
+import 'package:app_movel/requisicoes/GeladeiraReq.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AdicionarAmbiente extends StatelessWidget {
-  final VoidCallback aoAdicionarAmbiente;
-  final VoidCallback aoCancelar;
-  const AdicionarAmbiente({
-    super.key,
-    required this.aoAdicionarAmbiente,
-    required this.aoCancelar,
-  });
+  const AdicionarAmbiente({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Imagem do ambiente
-          const Center(
-            child: Card(
-              elevation: 4,
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.add_home,
-                        size: 80, color: Colors.orange), // Ícone do ambiente
-                    SizedBox(height: 10),
-                    Text(
-                      "NOVO AMBIENTE",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.brown,
+    TextEditingController nomeController = TextEditingController();
+    TextEditingController descricaoController = TextEditingController();
+    late GeladeiraReq geladeiraReq;
+
+    return Scaffold(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Center(
+              child: Card(
+                elevation: 4,
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.add_home, size: 80, color: Colors.orange),
+                      SizedBox(height: 10),
+                      Text(
+                        "NOVA GELADEIRA",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.brown,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 20),
-          // Campo de edição - Nome
-          _buildEditableField(
-            label: "NOME",
-            hintText: "Digite o nome do ambiente",
-          ),
-          const SizedBox(height: 10),
-          // Campo de edição - Localização
-          _buildEditableField(
-            label: "LOCALIZAÇÃO",
-            hintText: "Digite a localização do ambiente",
-          ),
-          const SizedBox(height: 10),
-          // Campo de edição - Descrição
-          _buildEditableField(
-            label: "DESCRIÇÃO",
-            hintText: "Descreva o ambiente",
-          ),
-          const SizedBox(height: 20),
-          // Botão Adicionar
-          Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            const SizedBox(height: 20),
+            CampoEscrever(
+              hintText: "Digite o nome da Geladeira",
+              prefixIcon: Icons.kitchen,
+              controller: nomeController,
+            ),
+            const SizedBox(height: 10),
+            CampoEscrever(
+              hintText: "Descrição da Geladeira",
+              prefixIcon: Icons.description,
+              controller: descricaoController,
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Botao(
+                  texto: 'CANCELAR',
+                  tipoNavegacao: 'push',
+                  destino: Aplicacao(),
+                ),
+                const SizedBox(width: 10),
                 ElevatedButton(
-                  onPressed: aoCancelar, // Callback para cancelar
+                  onPressed: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    final userId = prefs.getString("user_id") ?? "";
+                    print("User ID: $userId"); 
+                    if (userId.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text("Erro: O usuário não foi encontrado."),
+                      ));
+                      return;
+                    }
+
+                    final nome = nomeController.text;
+                    final descricao = descricaoController.text;
+
+                    print("Nome da geladeira: $nome");
+                    print(
+                        "Descrição da geladeira: $descricao");
+                    final conexao = await Conexao.getConnection();
+                    geladeiraReq = GeladeiraReq(conexao);
+
+                    final resultado = await geladeiraReq.inserirGeladeira(
+                      nome,
+                      descricao,
+                      userId,
+                    );
+
+                    print(
+                        "Resultado da inserção: $resultado"); 
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text(resultado)));
+
+                    if (resultado == "Geladeira adicionada com sucesso!") {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const Aplicacao()),
+                      );
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange[100],
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20.0),
+                      borderRadius:
+                          BorderRadius.circular(20.0),
                     ),
                     padding: const EdgeInsets.symmetric(
                         vertical: 15, horizontal: 30),
                   ),
                   child: const Text(
-                    'CANCELAR',
-                    style: TextStyle(color: Colors.black, fontSize: 16),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: aoAdicionarAmbiente, // Callback para salvar
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange[100],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20.0),
+                    "ADICIONAR GELADEIRA", 
+                    style: TextStyle(
+                      color: Colors.black, 
+                      fontSize: 16, 
                     ),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 15, horizontal: 30),
                   ),
-                  child: const Text(
-                    'SALVAR',
-                    style: TextStyle(color: Colors.black, fontSize: 16),
-                  ),
-                ),
+                )
               ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    );
-  }
-
-  // Função auxiliar para construir os campos editáveis
-  Widget _buildEditableField({
-    required String label,
-    required String hintText,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style:
-              const TextStyle(fontWeight: FontWeight.bold, color: Colors.brown),
-        ),
-        const SizedBox(height: 5),
-        TextField(
-          decoration: InputDecoration(
-            hintText: hintText,
-            filled: true,
-            fillColor: Colors.orange[100],
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(20.0),
-              borderSide: BorderSide.none,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

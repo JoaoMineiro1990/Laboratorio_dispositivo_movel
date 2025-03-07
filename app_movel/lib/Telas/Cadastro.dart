@@ -1,4 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:app_movel/Componentes/botao.dart';
+import 'package:app_movel/Componentes/alerta.dart';
+import 'package:app_movel/Componentes/campoescrever.dart';
+import 'package:app_movel/Componentes/cabecalho.dart';
+import 'package:app_movel/requisicoes/Conexao.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:app_movel/Telas/Aplicacao.dart';
+import 'package:app_movel/requisicoes/UserReq.dart';
 
 class Cadastro extends StatefulWidget {
   const Cadastro({super.key});
@@ -8,44 +16,88 @@ class Cadastro extends StatefulWidget {
 }
 
 class _CadastroState extends State<Cadastro> {
-  final TextEditingController _nomeController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _senhaController = TextEditingController();
-  final TextEditingController _confirmaSenhaController =
-      TextEditingController();
+  final _nomeController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _senhaController = TextEditingController();
+  final _confirmaSenhaController = TextEditingController();
+
+  late UserReq _userReq;
+
+  @override
+  void initState() {
+    super.initState();
+    Conexao.getConnection().then((conexao) {
+      _userReq = UserReq(conexao);
+    });
+  }
+
+  bool camposPreenchidos() {
+    return _nomeController.text.isNotEmpty &&
+        _emailController.text.isNotEmpty &&
+        _senhaController.text.isNotEmpty &&
+        _confirmaSenhaController.text.isNotEmpty;
+  }
+
+  bool verificarSenha() {
+    return _senhaController.text == _confirmaSenhaController.text;
+  }
+
+  Future<void> _cadastrarUsuario() async {
+    if (!camposPreenchidos()) {
+      Alerta(
+        titulo: "Campos Obrigatórios",
+        conteudo: "Por favor, preencha todos os campos.",
+      ).show(context);
+      return;
+    }
+
+    if (!verificarSenha()) {
+      Alerta(
+        titulo: "Erro",
+        conteudo: "As senhas não coincidem.",
+      ).show(context);
+      return;
+    }
+
+    try {
+      final resultado = await _userReq.inserirUsuario(
+        _nomeController.text,
+        _emailController.text,
+        _senhaController.text,
+      );
+
+      if (resultado.contains("sucesso")) {
+        
+        final idResult = await _userReq.getIdByEmail(_emailController.text);
+        final userId = idResult;
+
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString("user_id", userId);
+        print("ID do usuário salvo: $userId");
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Aplicacao()),
+        );
+      } else {
+        Alerta(
+          titulo: "Erro ao Cadastrar",
+          conteudo: resultado,
+        ).show(context);
+      }
+    } catch (e) {
+      Alerta(
+        titulo: "Erro",
+        conteudo: "Erro ao cadastrar usuário: $e",
+      ).show(context);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 243, 240, 240),
-      appBar: AppBar(
-        backgroundColor: Colors.orange[100],
-        elevation: 0,
-        title: const Row(
-          children: [
-            Expanded(
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Icon(Icons.inventory, color: Colors.brown),
-              ),
-            ),
-            Expanded(
-              child: Align(
-                alignment: Alignment.center,
-                child: Text(
-                  'StockPocket',
-                  style: TextStyle(
-                    color: Colors.brown,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            Expanded(child: SizedBox()),
-          ],
-        ),
-      ),
+      appBar: Cabecalho(titulo: 'Cadastro'),
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -63,131 +115,49 @@ class _CadastroState extends State<Cadastro> {
                 ),
                 const SizedBox(height: 20),
 
-                // Nome Completo
-                TextField(
+                CampoEscrever(
+                  hintText: 'Digite seu nome',
+                  prefixIcon: Icons.person,
                   controller: _nomeController,
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.person, color: Colors.brown),
-                    hintText: 'Digite seu nome',
-                    filled: true,
-                    fillColor: Colors.orange[100],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 15),
 
-                // Número de Telefone
-                TextField(
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.phone, color: Colors.brown),
-                    hintText: 'Digite seu número',
-                    filled: true,
-                    fillColor: Colors.orange[100],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
+                CampoEscrever(
+                  hintText: 'Digite seu número',
+                  prefixIcon: Icons.phone,
                 ),
                 const SizedBox(height: 15),
 
-                // Email
-                TextField(
+                CampoEscrever(
+                  hintText: 'Digite seu email',
+                  prefixIcon: Icons.email,
                   controller: _emailController,
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.email, color: Colors.brown),
-                    hintText: 'Digite seu email',
-                    filled: true,
-                    fillColor: Colors.orange[100],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 15),
 
-                // Senha
-                TextField(
+                CampoEscrever(
+                  hintText: 'Digite sua senha',
+                  prefixIcon: Icons.lock,
+                  isPassword: true,
                   controller: _senhaController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.lock, color: Colors.brown),
-                    hintText: 'Digite sua senha',
-                    filled: true,
-                    fillColor: Colors.orange[100],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 15),
 
-                // Confirme sua senha
-                TextField(
+                CampoEscrever(
+                  hintText: 'Confirme sua senha',
+                  prefixIcon: Icons.lock,
+                  isPassword: true,
                   controller: _confirmaSenhaController,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.lock, color: Colors.brown),
-                    hintText: 'Digite sua senha',
-                    filled: true,
-                    fillColor: Colors.orange[100],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 20),
 
-                // Botão Registrar
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange[100],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                    ),
-                    onPressed: () {
-                      if (_senhaController.text ==
-                          _confirmaSenhaController.text) {
-                        Navigator.pop(context, {
-                          "nome": _nomeController.text,
-                          "email": _emailController.text,
-                          "senha": _senhaController.text,
-                        });
-                      } else {
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              title: const Text("Erro"),
-                              content: const Text("As senhas não coincidem"),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: const Text("Voltar"),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      }
-                    },
-                    child: const Text(
-                      'REGISTRAR',
-                      style: TextStyle(color: Colors.black, fontSize: 16),
-                    ),
-                  ),
+                Botao(
+                  texto: 'REGISTRAR',
+                  tipoNavegacao: 'none', 
+                  beforeNavigate: () {
+                    _cadastrarUsuario();
+                    return false;
+                  },
                 ),
               ],
             ),

@@ -1,134 +1,203 @@
+import 'package:app_movel/Componentes/ConteudoRolavel.dart';
+import 'package:app_movel/Telas/DeleteGeladeira.dart';
+import 'package:app_movel/Telas/Login.dart';
+import 'package:app_movel/Telas/Produtos.dart';
+import 'package:app_movel/requisicoes/GeladeiraReq.dart';
+import 'package:app_movel/requisicoes/Conexao.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:app_movel/Telas/CompartilharProduto.dart';
 
-class SelecaoAmbientes extends StatelessWidget {
-  final String tituloEstoque;
-  final VoidCallback aoSelecionarProduto; // Callback para acessar próxima tela
-  final VoidCallback aoCancelar; // Callback para voltar à tela anterior
-  final VoidCallback aoEditarAmbiente; // Callback para editar ambiente
-  final VoidCallback
-      aoAdicionarAmbiente; // Callback para adicionar novo ambiente
+class SelecaoAmbientes extends StatefulWidget {
+  const SelecaoAmbientes({super.key});
 
-  const SelecaoAmbientes({
-    super.key,
-    required this.tituloEstoque,
-    required this.aoSelecionarProduto,
-    required this.aoCancelar,
-    required this.aoEditarAmbiente,
-    required this.aoAdicionarAmbiente,
-  });
+  @override
+  State<SelecaoAmbientes> createState() => _SelecaoAmbientesState();
+}
+
+class _SelecaoAmbientesState extends State<SelecaoAmbientes> {
+  List<Map<String, dynamic>> geladeirasPessoais = [];
+  List<Map<String, dynamic>> geladeirasCompartilhadas = [];
+  late GeladeiraReq _geladeiraReq;
+  String userId = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarDados();
+  }
+
+  Future<void> _carregarDados() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      userId = prefs.getString("user_id") ?? "";
+
+      final conexao = await Conexao.getConnection();
+      _geladeiraReq = GeladeiraReq(conexao);
+
+      final pessoais = await _geladeiraReq.getGeladeirasPessoais(userId);
+      final compartilhadas =
+          await _geladeiraReq.getGeladeirasCompartilhadas(userId);
+
+      setState(() {
+        geladeirasPessoais = pessoais;
+        geladeirasCompartilhadas = compartilhadas;
+      });
+    } catch (e) {
+      print("Erro ao carregar geladeiras: $e");
+    }
+  }
+
+  Future<void> _salvarIdGeladeira(String geladeiraId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("refrigerator_id", geladeiraId);
+    print("ID da geladeira salvo: $geladeiraId");
+    _carregarDados();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final List<String> setores = [
-      "Setor de Frios",
-      "Setor de Frutas",
-      "Setor de Bebidas",
-      "Setor de Higiene",
-      "Setor de Laticínios",
-      "Setor de Carnes",
-      "Setor de Verduras",
-      "Setor de Limpeza",
-      "Setor de Padaria",
-    ];
+    return Scaffold(
+      body: Column(
+        children: [
+          Expanded(
+            child: ConteudoRolavel(
+              titulo: 'Minhas Geladeiras',
+              itens: geladeirasPessoais
+                  .map((g) => {
+                        'titulo': g['name'] ?? 'Sem título',
+                        'descricao': g['description'] ?? 'Sem descrição',
+                        'id': g['id'],
+                      })
+                  .toList(),
+              iconePadrao: Icons.kitchen,
+              onTapItem: (titulo, descricao) async {
+                final geladeiraSelecionada = geladeirasPessoais.firstWhere(
+                  (g) => g['name'] == titulo && g['description'] == descricao,
+                );
 
-    return Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(
+                final geladeiraId = geladeiraSelecionada['id'];
+                if (geladeiraId != null) {
+                  await _salvarIdGeladeira(geladeiraId);
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Produtos(),
+                    ),
+                  );
+                }
+              },
+            ),
+          ),
+          Expanded(
+            child: ConteudoRolavel(
+              titulo: 'Geladeiras Compartilhadas',
+              itens: geladeirasCompartilhadas
+                  .map((g) => {
+                        'titulo': g['name'],
+                        'descricao': g['description'],
+                        'id': g['id'],
+                      })
+                  .toList(),
+              iconePadrao: Icons.people,
+              onTapItem: (titulo, descricao) async {
+                final geladeiraSelecionada =
+                    geladeirasCompartilhadas.firstWhere(
+                  (g) => g['name'] == titulo && g['description'] == descricao,
+                );
+
+                final geladeiraId = geladeiraSelecionada['id'];
+                if (geladeiraId != null) {
+                  await _salvarIdGeladeira(geladeiraId);
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Produtos(),
+                    ),
+                  );
+                }
+              },
+            ),
+          ),
+          Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                const Text(
-                  "SELECIONE O SETOR",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                // Lista de setores
-                Column(
-                  children: setores.map((setor) {
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      child: ListTile(
-                        leading: const Icon(
-                          Icons.inventory,
-                          size: 40,
-                          color: Colors.brown,
-                        ), // Ícone do setor
-                        title: Text(
-                          setor,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        onTap:
-                            aoSelecionarProduto, // Chama o callback ao clicar
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CompartilharProduto(),
                       ),
                     );
-                  }).toList(),
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange[100],
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15, horizontal: 30),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                  ),
+                  child: const Text(
+                    "COMPARTILHAR",
+                    style: TextStyle(color: Colors.black, fontSize: 16),
+                  ),
                 ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DeleteGeladeira(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange[100],
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15, horizontal: 30),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                  ),
+                  child: const Text(
+                    "DELETAR",
+                    style: TextStyle(color: Colors.black, fontSize: 16),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.clear();
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const Login()),
+                      (route) => false,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange[100],
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15, horizontal: 30),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
+                  ),
+                  child: const Text(
+                    "DESLOGAR",
+                    style: TextStyle(color: Colors.black, fontSize: 16),
+                  ),
+                )
               ],
             ),
           ),
-        ),
-        // Botões fixos (Editar, Novo, Cancelar)
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: aoEditarAmbiente, // Callback para editar ambiente
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange[100],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20.0),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                ),
-                child: const Text(
-                  'EDITAR',
-                  style: TextStyle(color: Colors.black, fontSize: 16),
-                ),
-              ),
-              ElevatedButton(
-                onPressed:
-                    aoAdicionarAmbiente, // Callback para adicionar ambiente
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange[100],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20.0),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                ),
-                child: const Text(
-                  'NOVO',
-                  style: TextStyle(color: Colors.black, fontSize: 16),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: aoCancelar, // Callback para cancelar
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange[100],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20.0),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                ),
-                child: const Text(
-                  'CANCELAR',
-                  style: TextStyle(color: Colors.black, fontSize: 16),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
